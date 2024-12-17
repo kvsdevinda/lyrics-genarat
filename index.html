@@ -1,0 +1,177 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <header>
+        <h1>
+            LyricsSearch
+        </h1>
+
+        <form id="form">
+            <input 
+                type="text"
+                id="search"
+                placeholder="enter the artist name or song name...."
+                >
+                <button>search</button>
+        </form>
+    </header>
+    
+</body>
+</html> -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Song Lyrics Search</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .container {
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 16px;
+            border: 2px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        #lyricsContainer {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Song Lyrics Search</h1>
+    </header>
+
+    <div class="container">
+        <!-- Search Form -->
+        <form id="form">
+            <input type="text" id="search" placeholder="Enter song name or artist..." required>
+            <button type="submit">Search</button>
+        </form>
+
+        <!-- Search Results -->
+        <div id="result" class="result"></div>
+
+        <!-- Lyrics Container -->
+        <div id="lyricsContainer"></div>
+        <button id="more" style="display:none;">Show More</button>
+    </div>
+
+    <script>
+        // Elements
+        const form = document.getElementById('form');
+        const search = document.getElementById('search');
+        const result = document.getElementById('result');
+        const lyricsContainer = document.getElementById('lyricsContainer');
+        const moreButton = document.getElementById('more');
+
+        const apiURL = 'https://api.lyrics.ovh';
+
+        // Function to fetch songs based on search term (artist or song name)
+        async function searchSong(term) {
+            const res = await fetch(`${apiURL}/suggest/${term}`);
+            const data = await res.json();
+
+            return data; // Return the response data for further processing
+        }
+
+        // Function to display search results
+        function displayResults(songs) {
+            result.innerHTML = ''; // Clear previous results
+            songs.forEach(song => {
+                const songElement = document.createElement('div');
+                songElement.classList.add('song');
+                songElement.innerHTML = `
+                    <h3>${song.artist.name} - ${song.title}</h3>
+                    <button class="viewLyrics" data-title="${song.title}" data-artist="${song.artist.name}">View Lyrics</button>
+                `;
+                result.appendChild(songElement);
+            });
+        }
+
+        // Function to fetch and display lyrics
+        async function displayLyrics(title, artist) {
+            const res = await fetch(`${apiURL}/v1/${artist}/${title}`);
+            const data = await res.json();
+
+            if (data.lyrics) {
+                lyricsContainer.innerHTML = `<pre>${data.lyrics}</pre>`;
+                moreButton.style.display = 'none'; // Hide "Show More" button if lyrics are fully loaded
+            } else {
+                lyricsContainer.innerHTML = 'Lyrics not found.';
+            }
+        }
+
+        // Event listener for form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault(); // Prevent page reload on form submission
+
+            const searchTerm = search.value.trim();
+            if (searchTerm) {
+                const data = await searchSong(searchTerm); // Fetch songs based on search term
+                displayResults(data.data); // Display results
+            }
+        });
+
+        // Event listener for lyrics button click
+        result.addEventListener('click', (e) => {
+            if (e.target.classList.contains('viewLyrics')) {
+                const title = e.target.getAttribute('data-title');
+                const artist = e.target.getAttribute('data-artist');
+                displayLyrics(title, artist); // Display lyrics for the clicked song
+                moreButton.style.display = 'block'; // Show the "Show More" button if needed
+            }
+        });
+
+        // Event listener for "Show More" button click (optional functionality)
+        moreButton.addEventListener('click', () => {
+            alert('More lyrics functionality can be added here.');
+        });
+    </script>
+
+</body>
+</html>
